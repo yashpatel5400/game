@@ -15,6 +15,8 @@
 
 #include "util/shader.h"
 #include "util/camera.h"
+
+#define STB_IMAGE_IMPLEMENTATION
 #include "third-party/stb_image.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -66,7 +68,7 @@ int main()
     // ---------------------------------------
     GLenum err = glewInit();
     if (GLEW_OK != err) {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
+        std::cerr << "Failed to initialize GLEW" << std::endl;
         return -1;
     }
 

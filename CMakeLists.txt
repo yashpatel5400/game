@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 include_directories(/usr/local/include/)
-link_directories(/usr/local/lib/)
 
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
@@ -19,8 +18,8 @@ add_executable(game
 )
 target_link_libraries(
     game 
-    glfw3
-    GLEW
+    glfw
+    GLEW::GLEW
 )
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
