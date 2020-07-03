@@ -42,6 +42,9 @@ void main()
     Light light = Light(0.50, vec3(1.0, 1.0, -2.5), vec3(1.0)); // white light
     Ball ball = Ball(1.0, vec3(0.0, 0.0, -2.5), vec3(1.0, 0.0, 0.0));
 
+    float bounceFreq = 2.0;
+    ball.position.y = abs(sin(bounceFreq * time));
+
     // we assume the rays are being cast from the origin, so ray point is dir * t
     vec3 pos = vec3(screenPos, -1.0);
     vec3 dir = normalize(pos);
