@@ -2,7 +2,7 @@
  * Filename     :   main.cpp
  * Content      :   Main game loop
  * Created      :   June 21, 2020
- * Authors      :   Yash Patel, Joey de Vries (https://learnopengl.com/Getting-started/Textures)
+ * Authors      :   Yash Patel
  * Language     :   C++17
 *******************************************************************************/
 
@@ -14,31 +14,38 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "util/shader.h"
-#include "util/camera.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "third-party/stb_image.h"
 
 const char* vertexShader = R"(
-#version 330 core
-layout (location = 0) in vec3 aPos;
+#version 420 core
+layout (location = 0) in vec2 aPos;
+
+out vec4 pos;
 
 void main()
 {
-	gl_Position = vec4(aPos, 1.0f);
+	gl_Position = vec4(vec2(2) * aPos - vec2(1), 0, 1);
+    pos = gl_Position;
 }
 )";
 
 const char* fragmentShader = R"(
-#version 330 core
+#version 420 core
+layout (location = 0) in vec2 aPos;
+
 out vec4 FragColor;
 
-// texture samplers
-uniform sampler2D texture;
+in vec4 pos;
 
 void main()
 {
-	FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    if (pos.x < 0.0) {
+    	FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    } else {
+        FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+    }
 }
 )";
 
@@ -49,12 +56,6 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
-
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
@@ -64,13 +65,9 @@ int main()
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
 
     // glfw window creation
     // --------------------
@@ -83,9 +80,6 @@ int main()
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    // tell GLFW to capture our mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -106,9 +100,9 @@ int main()
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float vertices[] = {
-        -0.5f, -0.5f, 0.5f,
-         0.5f, -0.5f, 0.5f,
-         0.0f,  0.5f, 0.5f,
+        2, 0,
+        0, 2,
+        0, 0
     };
 
     unsigned int VBO, VAO;
@@ -121,7 +115,7 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     // render loop
@@ -145,14 +139,6 @@ int main()
 
         // activate shader
         glUseProgram(program);
-
-        // pass projection matrix to shader (note that in this case it could change every frame)
-        //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        //gl_helper::setMat4(program, "projection", projection);
-
-        //// camera/view transformation
-        //glm::mat4 view = camera.GetViewMatrix();
-        //gl_helper::setMat4(program, "view", view);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -179,15 +165,6 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
