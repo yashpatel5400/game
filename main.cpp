@@ -90,9 +90,7 @@ int main(int argc, char** argv) {
 
     while (!glfwWindowShouldClose(window))
     {
-        float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        float currentTime = glfwGetTime();
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
@@ -104,6 +102,7 @@ int main(int argc, char** argv) {
         }
 
         glUseProgram(program);
+        gl_helper::setFloat(program, "time", currentTime);
         
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
