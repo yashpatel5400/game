@@ -9,6 +9,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glog/logging.h>
 
 #include <string>
 #include <fstream>
@@ -26,7 +27,7 @@ namespace gl_helper {
             if (!success)
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                LOG(FATAL) << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
             }
         }
         else
@@ -35,37 +36,47 @@ namespace gl_helper {
             if (!success)
             {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                LOG(FATAL) << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
             }
         }
     }
 
     GLuint compile(const char* vShaderCode, const char* fShaderCode) {
-        // 2. compile shaders
         unsigned int vertex, fragment;
-        // vertex shader
+
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
         checkCompileErrors(vertex, "VERTEX");
-        // fragment Shader
+
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
 
-        // shader Program
         GLuint program = glCreateProgram();
         glAttachShader(program, vertex);
         glAttachShader(program, fragment);
 
         glLinkProgram(program);
         checkCompileErrors(program, "PROGRAM");
-        // delete the shaders as they're linked into our program now and no longer necessery
+
         glDeleteShader(vertex);
         glDeleteShader(fragment);
 
         return program;
+    }
+
+    GLuint compilePaths(const std::filesystem::path& vsPath, const std::filesystem::path& fsPath) {
+        auto readPath = [&](const std::filesystem::path& path) {
+            LOG(INFO) << folly::sformat("Compiling: {}", path.string());
+            std::ifstream ifs(path);
+            return std::string((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+        };
+        return compile(
+            readPath(vsPath).c_str(),
+            readPath(fsPath).c_str()
+        );
     }
 
     void setBool(GLuint program, const std::string& name, bool value)
