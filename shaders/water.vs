@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Filename     :   sdf.vs
- * Content      :   Fullscreen SDF VS
+ * Filename     :   water.vs
+ * Content      :   Extremely basic water movement VS
  * Created      :   June 21, 2020
  * Authors      :   Yash Patel
  * Language     :   GLSL

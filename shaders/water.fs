@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Filename     :   sdf.fs
- * Content      :   Fullscreen SDF FS
+ * Filename     :   water.fs
+ * Content      :   Extremely basic water movement FS
  * Created      :   June 21, 2020
  * Authors      :   Yash Patel
  * Language     :   GLSL

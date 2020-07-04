@@ -1,7 +1,7 @@
 /*******************************************************************************
- * Filename     :   main.cpp
- * Content      :   Main game loop
- * Created      :   June 21, 2020
+ * Filename     :   heightmap.cpp
+ * Content      :   Basic heightmap to play around with some shaders (water/terrain)
+ * Created      :   July 4, 2020
  * Authors      :   Yash Patel
  * Language     :   C++17
 *******************************************************************************/
