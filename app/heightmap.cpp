@@ -25,6 +25,9 @@
 
 DEFINE_string(path, "", "path to shaders directory");
 DEFINE_string(shader, "", "name of shader (assumed [shader].vs and [shader].fs files)");
+DEFINE_int32(depth, 10, "length of heightmap");
+DEFINE_int32(width, 10, "width of heightmap");
+DEFINE_double(square, 0.10, "heightmap square size (smaller -> higher tesselation resolution)");
 
 const unsigned int SCR_SIZE = 1000;
 
@@ -42,6 +45,8 @@ float pitch = 0.0f;
 float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 float fov = 45.0f;
+
+bool wireframe = false;
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -88,6 +93,11 @@ void processInput(GLFWwindow* window)
     }
     else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         cameraPos -= cameraFront * kStepSize;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
+        wireframe = !wireframe;
+        wireframe ? glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) 
+                  : glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 }
 
@@ -137,49 +147,32 @@ int main(int argc, char** argv) {
         }
     });
 
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
+    const float kSquareSize = FLAGS_square;
+    std::vector<float> vertices;
 
-        -0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
+    for (int rowIdx = 0; rowIdx < FLAGS_depth; rowIdx++) {
+        const float rowDepth = rowIdx * kSquareSize;
+        for (int squareIdx = 0; squareIdx <= FLAGS_width; squareIdx++) {
+            vertices.insert(vertices.end(), {
+                squareIdx * kSquareSize, 0.0, rowDepth,
+                squareIdx * kSquareSize, 0.0, rowDepth - kSquareSize,
+            });
+        }
 
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
+        // degenerate vertices to avoid spurious triangles in heightmap
+        if (rowIdx != FLAGS_depth - 1) {
+            auto insertDegenerate = [&](const glm::vec3& point) {
+                vertices.insert(vertices.end(), {
+                    point.x, point.y, point.z,
+                    point.x, point.y, point.z,
+                    point.x, point.y, point.z
+                });
+            };
 
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f,
-
-        -0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f
-    };
+            insertDegenerate(glm::vec3(FLAGS_width * kSquareSize, 0.0, rowDepth + kSquareSize));
+            insertDegenerate(glm::vec3(kSquareSize, 0.0, rowDepth + kSquareSize));
+        }
+    }
 
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -188,7 +181,7 @@ int main(int argc, char** argv) {
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -219,7 +212,7 @@ int main(int argc, char** argv) {
         glm::mat4 view = glm::lookAt(cameraPos, glm::vec3(0.0), cameraUp);
         gl_helper::setMat4(program, "view", view);
 
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size() / 3);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
