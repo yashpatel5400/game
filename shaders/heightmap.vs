@@ -7,12 +7,12 @@
 *******************************************************************************/
 
 #version 420 core
-layout (location = 0) in vec2 aPos;
+layout (location = 0) in vec3 aPos;
 
-out vec2 screenPos;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main()
 {
-	gl_Position = vec4(vec2(2) * aPos - vec2(1), 0, 1);
-    screenPos = gl_Position.xy;
+	gl_Position = projection * view * vec4(aPos, 1);
 }
