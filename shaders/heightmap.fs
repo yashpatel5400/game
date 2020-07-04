@@ -71,7 +71,7 @@ void main()
 
     // we assume the rays are being cast from the origin, so ray point is dir * t
     vec3 origin = vec3(0.0);
-    vec3 cameraPos = vec3(5.0 * sin(0.5 * time), 1.0, 5.0 * cos(0.5 * time));
+    vec3 cameraPos = vec3(0.0, 1.0, 5.0);
     vec3 cameraUp = vec3(0.0, 1.0, 0.0); // assume camera on x-z plane
     vec3 cameraForward = normalize(origin - cameraPos); // camera faces origin
     vec3 cameraRight = normalize(cross(cameraForward, cameraUp));
@@ -102,7 +102,7 @@ void main()
         // floor (currently has aliasing)
         if (worldRay.y < 0.0) {
             float lightStrength = light.intensity / length(worldRay - light.position);
-            FragColor = vec4(vec3(0.0, 1.0, 0.0) * lightStrength, 1.0);
+            FragColor = vec4(vec3(0.2, 1.0, 0.0) * lightStrength, 1.0);
             return;
 		}
 	}

@@ -69,7 +69,7 @@ namespace gl_helper {
 
     GLuint compilePaths(const std::filesystem::path& vsPath, const std::filesystem::path& fsPath) {
         auto readPath = [&](const std::filesystem::path& path) {
-            LOG(INFO) << folly::sformat("Compiling: {}", path.string());
+            LOG(INFO) << "Compiling: " << path.string();
             std::ifstream ifs(path);
             return std::string((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
         };

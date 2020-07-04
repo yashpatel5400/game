@@ -6,19 +6,22 @@
  * Language     :   C++17
 *******************************************************************************/
 
-#include <iostream>
+#include <atomic>
 #include <filesystem>
+#include <iostream>
 #include <mutex>
+#include <map>
 #include <thread>
-#include <folly/Format.h>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include "util/shader.h"
+#include "../util/shader.h"
 
 DEFINE_string(path, "", "path to shaders directory");
+DEFINE_string(shader, "", "name of shader (assumed [shader].vs and [shader].fs files)");
 
 const unsigned int SCR_SIZE = 1000;
 
@@ -39,7 +42,7 @@ int main(int argc, char** argv) {
 
     GLFWwindow* window = glfwCreateWindow(SCR_SIZE, SCR_SIZE, "SDF", NULL, NULL);
     CHECK(window != NULL) << "Failed to create GLFW window";
-    
+
     glfwMakeContextCurrent(window);
 
     GLenum err = glewInit();
@@ -47,8 +50,8 @@ int main(int argc, char** argv) {
 
     glEnable(GL_DEPTH_TEST);
 
-    auto vsPath = std::filesystem::path(FLAGS_path) / "sdf.vs";
-    auto fsPath = std::filesystem::path(FLAGS_path) / "sdf.fs";
+    auto vsPath = std::filesystem::path(FLAGS_path) / (FLAGS_shader + ".vs");
+    auto fsPath = std::filesystem::path(FLAGS_path) / (FLAGS_shader + ".fs");
     std::atomic_bool needsRecompile = false;
     GLuint program = gl_helper::compilePaths(vsPath, fsPath);
 
@@ -65,10 +68,10 @@ int main(int argc, char** argv) {
                     needsRecompile = true;
                 }
             }
-               
+
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
-    });
+        });
 
     float vertices[] = {
         2, 0,
@@ -93,17 +96,17 @@ int main(int argc, char** argv) {
         float currentTime = glfwGetTime();
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (needsRecompile) {
-            LOG(INFO) << folly::sformat("Shaders modified! Recompiling...");
+            LOG(INFO) << "Shaders modified! Recompiling...";
             needsRecompile = false;
             program = gl_helper::compilePaths(vsPath, fsPath);
         }
 
         glUseProgram(program);
         gl_helper::setFloat(program, "time", currentTime);
-        
+
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);
