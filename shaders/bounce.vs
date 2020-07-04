@@ -1,19 +1,23 @@
 /*******************************************************************************
- * Filename     :   terrain.fs
- * Content      :   Random terrain generation FS
+ * Filename     :   terrain.vs
+ * Content      :   Random bouncers VS
  * Created      :   June 21, 2020
  * Authors      :   Yash Patel
  * Language     :   GLSL
 *******************************************************************************/
 
 #version 420 core
-layout (location = 0) in vec2 aPos;
+layout (location = 0) in vec3 aPos;
 
 uniform float time;
 
-out vec4 FragColor;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec3 pos;
 
 void main()
 {
-    FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+    pos = aPos;
+	gl_Position = projection * view * vec4(pos, 1);
 }
